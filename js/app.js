@@ -1,7 +1,18 @@
 // Data storage
 let data = {
     income: [],
-    expenses: []
+    expenses: [],
+    categories: [
+        { name: 'Housing', icon: '🏠', subcategories: ['Rent', 'Mortgage', 'Utilities', 'Maintenance'] },
+        { name: 'Transportation', icon: '🚗', subcategories: ['Petrol', 'Public Transport', 'Maintenance', 'Insurance'] },
+        { name: 'Food', icon: '🍔', subcategories: ['Groceries', 'Restaurants', 'Takeaway', 'Coffee'] },
+        { name: 'Utilities', icon: '⚡', subcategories: ['Electricity', 'Water', 'Internet', 'Phone'] },
+        { name: 'Healthcare', icon: '🏥', subcategories: ['Doctor', 'Medicine', 'Insurance', 'Dental'] },
+        { name: 'Entertainment', icon: '🎬', subcategories: ['Movies', 'Games', 'Sports', 'Subscriptions'] },
+        { name: 'Shopping', icon: '🛍️', subcategories: ['Clothing', 'Electronics', 'Home', 'Personal'] },
+        { name: 'Education', icon: '📚', subcategories: ['Books', 'Courses', 'Training', 'Materials'] },
+        { name: 'Other', icon: '📦', subcategories: ['Miscellaneous'] }
+    ]
 };
 
 const USD_TO_ZAR = 18.50;
@@ -13,8 +24,60 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('incomeDate').value = today;
     document.getElementById('expenseDate').value = today;
     
+    // Load categories
+    loadCategories();
     updateOverview();
 });
+
+// Load categories into dropdown
+function loadCategories() {
+    const categorySelect = document.getElementById('expenseCategory');
+    categorySelect.innerHTML = '<option value="">Select category...</option>';
+    
+    data.categories.forEach(category => {
+        const option = document.createElement('option');
+        option.value = category.name;
+        option.textContent = `${category.icon} ${category.name}`;
+        categorySelect.appendChild(option);
+    });
+}
+
+// Load subcategories based on selected category
+function loadSubcategories(categoryName) {
+    const subcategorySelect = document.getElementById('expenseSubcategory');
+    const subcategoryGroup = document.getElementById('subcategoryGroup');
+    
+    if (!categoryName) {
+        subcategoryGroup.style.display = 'none';
+        return;
+    }
+
+    const category = data.categories.find(cat => cat.name === categoryName);
+    if (category && category.subcategories.length > 0) {
+        subcategoryGroup.style.display = 'block';
+        subcategorySelect.innerHTML = '<option value="">Select subcategory...</option>';
+        
+        category.subcategories.forEach(subcategory => {
+            const option = document.createElement('option');
+            option.value = subcategory;
+            option.textContent = subcategory;
+            subcategorySelect.appendChild(option);
+        });
+    } else {
+        subcategoryGroup.style.display = 'none';
+    }
+}
+
+// Handle category selection change
+document.getElementById('expenseCategory').addEventListener('change', function() {
+    loadSubcategories(this.value);
+});
+
+// Get category icon
+function getCategoryIcon(categoryName) {
+    const category = data.categories.find(cat => cat.name === categoryName);
+    return category ? category.icon : '📦';
+}
 
 // Format currency
 function formatCurrency(amount, currency = 'ZAR') {
@@ -87,9 +150,11 @@ function addIncome() {
 function addExpense() {
     const description = document.getElementById('expenseDescription').value.trim();
     const category = document.getElementById('expenseCategory').value;
+    const subcategory = document.getElementById('expenseSubcategory').value;
     const date = document.getElementById('expenseDate').value;
     const amount = parseFloat(document.getElementById('expenseAmount').value);
     const currency = document.getElementById('expenseCurrency').value;
+    const frequency = document.getElementById('expenseFrequency').value;
 
     if (!description || !category || !date || isNaN(amount) || amount <= 0) {
         alert('Please fill in all fields with valid values');
@@ -100,9 +165,11 @@ function addExpense() {
         id: Date.now(),
         description,
         category,
+        subcategory: subcategory || null,
         date,
         amount,
         currency,
+        frequency,
         amountZAR: convertToZAR(amount, currency)
     };
 
@@ -111,7 +178,10 @@ function addExpense() {
     // Clear form
     document.getElementById('expenseDescription').value = '';
     document.getElementById('expenseCategory').value = '';
+    document.getElementById('expenseSubcategory').value = '';
     document.getElementById('expenseAmount').value = '';
+    document.getElementById('expenseFrequency').value = 'once';
+    document.getElementById('subcategoryGroup').style.display = 'none';
     
     updateOverview();
     updateExpensesList();
@@ -202,15 +272,19 @@ function updateExpensesList() {
                <div class="amount-secondary">${formatCurrency(expense.amount, 'USD')}</div>`
             : `<div class="amount-primary">${formatCurrency(expense.amount)}</div>`;
 
+        const categoryIcon = getCategoryIcon(expense.category);
+        const subcategoryText = expense.subcategory ? ` • ${expense.subcategory}` : '';
+        const frequencyText = expense.frequency !== 'once' ? ` • ${expense.frequency}` : '';
+
         return `
             <div class="entry-item">
                 <div class="entry-info">
                     <div class="entry-icon" style="background: #ef444420; color: #ef4444;">
-                        💸
+                        ${categoryIcon}
                     </div>
                     <div class="entry-details">
                         <div class="entry-name">${expense.description}</div>
-                        <div class="entry-meta">${expense.category} • ${new Date(expense.date).toLocaleDateString()}</div>
+                        <div class="entry-meta">${expense.category}${subcategoryText}${frequencyText} • ${new Date(expense.date).toLocaleDateString()}</div>
                     </div>
                 </div>
                 <div class="entry-amount">
@@ -255,14 +329,15 @@ function updateCategoryBreakdown() {
             category,
             amount,
             percentage: (amount / totalExpenses * 100).toFixed(1),
-            color: colors[index % colors.length]
+            color: colors[index % colors.length],
+            icon: getCategoryIcon(category)
         }));
 
     categoryBreakdown.innerHTML = sortedCategories.map(item => `
         <div class="category-item">
             <div class="category-info">
                 <div class="category-dot" style="background: ${item.color}"></div>
-                <span>${item.category}</span>
+                <span>${item.icon} ${item.category}</span>
             </div>
             <div>
                 <span class="category-amount">${formatCurrency(item.amount)}</span>
@@ -347,18 +422,102 @@ function switchTab(tabName) {
     }
 }
 
+// Modal functions
+function openAddCategoryModal() {
+    document.getElementById('categoryModal').classList.add('active');
+    document.getElementById('newCategoryName').focus();
+}
+
+function closeCategoryModal() {
+    document.getElementById('categoryModal').classList.remove('active');
+    document.getElementById('newCategoryName').value = '';
+    document.getElementById('newCategoryIcon').value = '';
+}
+
+function addNewCategory() {
+    const name = document.getElementById('newCategoryName').value.trim();
+    const icon = document.getElementById('newCategoryIcon').value.trim() || '📦';
+
+    if (!name) {
+        alert('Please enter a category name');
+        return;
+    }
+
+    // Check if category already exists
+    if (data.categories.find(cat => cat.name.toLowerCase() === name.toLowerCase())) {
+        alert('Category already exists');
+        return;
+    }
+
+    data.categories.push({
+        name: name,
+        icon: icon,
+        subcategories: []
+    });
+
+    loadCategories();
+    closeCategoryModal();
+}
+
+function openAddSubcategoryModal() {
+    const selectedCategory = document.getElementById('expenseCategory').value;
+    if (!selectedCategory) {
+        alert('Please select a category first');
+        return;
+    }
+    document.getElementById('subcategoryModal').classList.add('active');
+    document.getElementById('newSubcategoryName').focus();
+}
+
+function closeSubcategoryModal() {
+    document.getElementById('subcategoryModal').classList.remove('active');
+    document.getElementById('newSubcategoryName').value = '';
+}
+
+function addNewSubcategory() {
+    const selectedCategory = document.getElementById('expenseCategory').value;
+    const subcategoryName = document.getElementById('newSubcategoryName').value.trim();
+
+    if (!subcategoryName) {
+        alert('Please enter a subcategory name');
+        return;
+    }
+
+    const category = data.categories.find(cat => cat.name === selectedCategory);
+    if (category) {
+        // Check if subcategory already exists
+        if (category.subcategories.includes(subcategoryName)) {
+            alert('Subcategory already exists');
+            return;
+        }
+
+        category.subcategories.push(subcategoryName);
+        loadSubcategories(selectedCategory);
+        closeSubcategoryModal();
+    }
+}
+
+// Close modals when clicking outside
+document.getElementById('categoryModal').addEventListener('click', function(e) {
+    if (e.target === this) closeCategoryModal();
+});
+
+document.getElementById('subcategoryModal').addEventListener('click', function(e) {
+    if (e.target === this) closeSubcategoryModal();
+});
+
 // Export to CSV
 function exportToCSV() {
-    let csv = 'Type,Description,Category,Date,Amount,Currency,Amount (ZAR)\n';
+    let csv = 'Type,Description,Category,Subcategory,Date,Amount,Currency,Amount (ZAR),Frequency\n';
     
     // Add income entries
     data.income.forEach(income => {
-        csv += `Income,"${income.description}",,"${income.date}",${income.amount},${income.currency},${income.amountZAR}\n`;
+        csv += `Income,"${income.description}",,,,"${income.date}",${income.amount},${income.currency},${income.amountZAR},\n`;
     });
     
     // Add expense entries
     data.expenses.forEach(expense => {
-        csv += `Expense,"${expense.description}","${expense.category}","${expense.date}",${expense.amount},${expense.currency},${expense.amountZAR}\n`;
+        csv += `Expense,"${expense.description}","${expense.category}","${expense.subcategory || ''}","${expense.date}",${expense.amount},${expense.currency},${expense.amountZAR},${expense.frequency}\n`;
     });
     
     // Create and download file
