@@ -10,6 +10,11 @@ A modern, responsive personal finance tracker built with vanilla HTML, CSS, and 
 - ✅ **Data Export** - Export your financial data to CSV format
 - ✅ **Responsive Design** - Works seamlessly on desktop and mobile devices
 - ✅ **Clean Interface** - Modern, intuitive user experience
+- 🚀 **Live Preview Available** - Test the app directly in development
+
+## Demo
+
+You can test the financial planner with sample data by adding income and expenses through the forms. The application provides real-time updates and analytics as you interact with it.
 
 ## Getting Started
 
@@ -22,7 +27,7 @@ A modern, responsive personal finance tracker built with vanilla HTML, CSS, and 
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/financial-planner.git
+git clone https://github.com/jslabxyz/financial-planner.git
 cd financial-planner
 ```
 
@@ -47,7 +52,7 @@ Or simply double-click the `index.html` file.
 
 ### Viewing Analytics
 - Switch between Income, Expenses, and Analytics tabs
-- View categorized breakdowns of your spending
+- View categorised breakdowns of your spending
 - Monitor your savings rate and net income
 
 ### Exporting Data
@@ -59,13 +64,13 @@ Or simply double-click the `index.html` file.
 
 ```
 financial-planner/
-├── index.html          # Main HTML file
+├── index.html           # Main HTML file
 ├── css/
-│   └── styles.css      # All CSS styles
+│   └── styles.css       # All CSS styles
 ├── js/
-│   └── app.js          # Application logic
-├── assets/             # Future assets (images, icons)
-└── README.md           # Project documentation
+│   └── app.js           # Application logic
+├── assets/              # Future assets (images, icons)
+└── README.md            # Project documentation
 ```
 
 ## Currency Support
@@ -81,6 +86,10 @@ financial-planner/
 - Safari 12+
 - Edge 79+
 
+## Development Workflow
+
+This project supports live development with real-time previews and direct GitHub integration for streamlined development and deployment.
+
 ## Contributing
 
 1. Fork the repository
@@ -93,10 +102,12 @@ financial-planner/
 
 - [ ] Data persistence with localStorage
 - [ ] Budget planning and tracking
-- [ ] Data visualization with charts
+- [ ] Data visualisation with charts
 - [ ] Multiple account support
 - [ ] Recurring transaction templates
 - [ ] Import from bank statements
+- [ ] Progressive Web App (PWA) capabilities
+- [ ] Dark mode support
 
 ## License
 
